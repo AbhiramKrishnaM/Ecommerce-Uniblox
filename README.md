@@ -25,26 +25,6 @@ Every nth order generates a discount code for 10% off that can be applied to fut
 - CSS/SCSS
 - Context API for state management
 
-## Project Structure
-
-/
-├── backend/ # Backend server code
-│ ├── controller/ # API controllers
-│ ├── routes/ # Express routes
-│ ├── prisma/ # Prisma schema and migrations
-│ ├── lib/ # Utility functions
-│ └── server.js # Entry point
-│
-├── frontend/ # Frontend React application
-│ ├── public/ # Static files
-│ └── src/ # React source code
-│ ├── components/ # Reusable UI components
-│ ├── contexts/ # Context API for state management
-│ ├── pages/ # Page components
-│ └── services/ # API service calls
-│
-└── README.md # Project documentation
-
 ## Features
 
 - **Product Management**: View and browse products
