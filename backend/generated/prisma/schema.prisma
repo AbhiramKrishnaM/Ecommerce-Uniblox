@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Product model
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  description String?
+  imageUrl    String?
+  stock       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+// Cart model
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String? // Optional: can be null for guest carts
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  items CartItem[]
+}
+
+// CartItem model (join table between Cart and Product)
+model CartItem {
+  id        String   @id @default(uuid())
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  @@unique([cartId, productId])
+}
+
+// Order model
+model Order {
+  id          String      @id @default(uuid())
+  userId      String? // Optional: can be null for guest orders
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Shipping and billing information
+  shippingAddress String?
+  billingAddress  String?
+  contactEmail    String?
+  contactPhone    String?
+
+  // Relationships
+  items          OrderItem[]
+  discountCode   DiscountCode? @relation(fields: [discountCodeId], references: [id])
+  discountCodeId String?
+}
+
+// Order status enum
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// OrderItem model (items in an order)
+model OrderItem {
+  id        String   @id @default(uuid())
+  quantity  Int
+  unitPrice Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  // Relationships
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  @@unique([orderId, productId])
+}
+
+// Discount Code model
+model DiscountCode {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minPurchase   Decimal?     @db.Decimal(10, 2)
+  maxUses       Int?
+  currentUses   Int          @default(0)
+  startDate     DateTime     @default(now())
+  endDate       DateTime?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relationships
+  orders Order[]
+}
+
+// Discount type enum
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
