@@ -29,14 +29,29 @@ model Product {
   orderItems OrderItem[]
 }
 
-// Cart model
-model Cart {
+// User model
+model User {
   id        String   @id @default(uuid())
-  userId    String? // Optional: can be null for guest carts
+  username  String   @unique
+  password  String
+  role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relationships
+  carts  Cart[]  @relation("UserCarts")
+  orders Order[] @relation("UserOrders")
+}
+
+// Cart model
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user  User?      @relation("UserCarts", fields: [userId], references: [id])
   items CartItem[]
 }
 
@@ -59,7 +74,7 @@ model CartItem {
 // Order model
 model Order {
   id              String      @id @default(uuid())
-  userId          String? // Optional: can be null for guest orders
+  userId          String?
   status          OrderStatus @default(PENDING)
   totalAmount     Decimal     @db.Decimal(10, 2)
   shippingAddress String?
@@ -70,6 +85,7 @@ model Order {
   updatedAt       DateTime    @updatedAt
 
   // Relationships
+  user           User?         @relation("UserOrders", fields: [userId], references: [id])
   items          OrderItem[]
   discountCode   DiscountCode? @relation(fields: [discountCodeId], references: [id])
   discountCodeId String?
@@ -123,4 +139,9 @@ model DiscountCode {
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }

@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs"; // Add this dependency for password hashing
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -9,6 +11,19 @@ async function main() {
   await prisma.order.deleteMany({});
   await prisma.product.deleteMany({});
   await prisma.discountCode.deleteMany({});
+  await prisma.user.deleteMany({}); // Add this line
+
+  // Create admin user
+  const hashedPassword = await bcrypt.hash("admin", 10);
+  const adminUser = await prisma.user.create({
+    data: {
+      username: "admin",
+      password: hashedPassword,
+      role: "ADMIN",
+    },
+  });
+
+  console.log("Admin user created:", adminUser.username);
 
   // Create sample products
   const products = await Promise.all([
