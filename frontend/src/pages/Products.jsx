@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { productService } from "../api";
+import { productService } from "../../api";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
