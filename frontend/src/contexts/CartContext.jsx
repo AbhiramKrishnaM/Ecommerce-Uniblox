@@ -1,69 +1,76 @@
 import { createContext, useContext, useState } from "react";
-import { cartService } from "../../api";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [cartItems, setCartItems] = useLocalStorage("cartItems", []);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const initializeCart = async (userId = null) => {
-    try {
-      setLoading(true);
-      const newCart = await cartService.createCart(userId);
-      setCart(newCart);
-      localStorage.setItem("cartId", newCart.id);
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+  // Calculate cart totals
+  const cartTotal = cartItems.reduce((total, item) => {
+    return total + parseFloat(item.price) * item.quantity;
+  }, 0);
+
+  const itemsCount = cartItems.reduce((total, item) => {
+    return total + item.quantity;
+  }, 0);
+
+  // Add item to cart
+  const addToCart = (product) => {
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        return prevItems.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+
+      return [...prevItems, { ...product, quantity: 1 }];
+    });
   };
 
-  const addItem = async (productId, quantity) => {
-    try {
-      setLoading(true);
-      const updatedCart = await cartService.addItem(
-        cart.id,
-        productId,
-        quantity
-      );
-      setCart(updatedCart);
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
+  // Remove item from cart
+  const removeFromCart = (productId) => {
+    setCartItems((prevItems) =>
+      prevItems.filter((item) => item.id !== productId)
+    );
   };
 
-  const updateItemQuantity = async (productId, quantity) => {
-    try {
-      setLoading(true);
-      const updatedCart = await cartService.updateItemQuantity(
-        cart.id,
-        productId,
-        quantity
-      );
-      setCart(updatedCart);
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
+  // Update item quantity
+  const updateQuantity = (productId, quantity) => {
+    if (quantity < 1) {
+      removeFromCart(productId);
+      return;
     }
+
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  // Clear cart
+  const clearCart = () => {
+    setCartItems([]);
   };
 
   return (
     <CartContext.Provider
       value={{
-        cart,
-        loading,
-        error,
-        initializeCart,
-        addItem,
-        updateItemQuantity,
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        cartTotal,
+        itemsCount,
+        isCartOpen,
+        setIsCartOpen,
       }}
     >
       {children}

@@ -2,24 +2,16 @@ import { useCart } from "../contexts/CartContext";
 import { formatPrice } from "../utils/formatters";
 
 export default function ProductCard({ product }) {
-  const { cart, addItem, updateItemQuantity } = useCart();
+  const { cartItems, addToCart, removeFromCart } = useCart();
 
-  const isInCart = cart?.items?.some((item) => item.productId === product.id);
+  const isInCart = cartItems.some((item) => item.id === product.id);
 
-  const handleAddToCart = async () => {
-    try {
-      await addItem(product.id, 1);
-    } catch (error) {
-      console.error("Failed to add item to cart:", error);
-    }
+  const handleAddToCart = () => {
+    addToCart(product);
   };
 
-  const handleRemoveFromCart = async () => {
-    try {
-      await updateItemQuantity(product.id, 0);
-    } catch (error) {
-      console.error("Failed to remove item from cart:", error);
-    }
+  const handleRemoveFromCart = () => {
+    removeFromCart(product.id);
   };
 
   return (
