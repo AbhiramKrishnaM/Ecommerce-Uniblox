@@ -30,9 +30,18 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout
-router.post("/logout", authenticateToken, async (req, res) => {
+router.post("/logout", async (req, res) => {
   try {
-    await AuthService.blacklistToken(req.headers.authorization.split(" ")[1]);
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res
+        .status(401)
+        .json(ResponseUtil.error("Authentication required", 401));
+    }
+
+    await AuthService.blacklistToken(token);
     res.json(ResponseUtil.success(null, "Logged out successfully"));
   } catch (error) {
     res.status(500).json(ResponseUtil.error(error.message));
