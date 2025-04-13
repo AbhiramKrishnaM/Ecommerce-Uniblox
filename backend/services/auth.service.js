@@ -40,18 +40,28 @@ export class AuthService {
   }
 
   static async blacklistToken(token) {
-    await prisma.blacklistedToken.create({
-      data: {
-        token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
+    try {
+      return await prisma.blacklistedToken.create({
+        data: {
+          token,
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        },
+      });
+    } catch (error) {
+      console.error("Error blacklisting token:", error);
+      throw new Error("Failed to blacklist token");
+    }
   }
 
   static async isTokenBlacklisted(token) {
-    const blacklistedToken = await prisma.blacklistedToken.findUnique({
-      where: { token },
-    });
-    return !!blacklistedToken;
+    try {
+      const blacklistedToken = await prisma.blacklistedToken.findUnique({
+        where: { token },
+      });
+      return !!blacklistedToken;
+    } catch (error) {
+      console.error("Error checking blacklisted token:", error);
+      return false;
+    }
   }
 }
