@@ -32,9 +32,7 @@ router.post("/login", async (req, res) => {
 // Logout
 router.post("/logout", authenticateToken, async (req, res) => {
   try {
-    // Optional: Add the token to a blacklist in Redis/DB
-    // await AuthService.blacklistToken(req.user.token);
-
+    await AuthService.blacklistToken(req.headers.authorization.split(" ")[1]);
     res.json(ResponseUtil.success(null, "Logged out successfully"));
   } catch (error) {
     res.status(500).json(ResponseUtil.error(error.message));
