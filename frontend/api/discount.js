@@ -8,7 +8,7 @@ export const discountService = {
         throw new Error("No authentication token found");
       }
 
-      const response = await axios.get("/auth/discount-codes", {
+      const response = await axios.get("/auth/my-discounts", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

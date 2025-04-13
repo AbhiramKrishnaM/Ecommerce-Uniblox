@@ -4,6 +4,7 @@ import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { formatPrice } from "../utils/formatters";
 import { discountService } from "../../api/discount";
+import { orderService } from "../../api/orders";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -38,11 +39,6 @@ export default function Checkout() {
     sameAsBilling: true,
   });
 
-  if (!cartItems.length) {
-    navigate("/cart");
-    return null;
-  }
-
   // Fetch user's discount codes
   useEffect(() => {
     const fetchDiscounts = async () => {
@@ -60,6 +56,12 @@ export default function Checkout() {
 
     fetchDiscounts();
   }, [user]);
+
+  // Check for empty cart after all hooks
+  if (!cartItems.length) {
+    navigate("/cart");
+    return null;
+  }
 
   const handleAddressChange = (type, field, value) => {
     setFormData((prev) => ({
@@ -160,30 +162,20 @@ export default function Checkout() {
         discountCode: appliedDiscount?.code,
       };
 
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Checkout failed");
-      }
+      const data = await orderService.createOrder(orderData);
 
       clearCart();
       navigate("/order-success", {
         state: {
-          orderId: data.data.order.id,
-          orderDetails: data.data.order,
+          orderId: data.order.id,
+          orderDetails: data.order,
         },
       });
     } catch (error) {
-      setError(error.message);
+      setError(
+        error.response?.data?.message || error.message || "Checkout failed"
+      );
+      console.error("Checkout error:", error);
     } finally {
       setLoading(false);
     }
@@ -306,7 +298,78 @@ export default function Checkout() {
                     required
                   />
                 </div>
-                {/* Add other shipping address fields similarly */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.shippingAddress.city}
+                    onChange={(e) =>
+                      handleAddressChange(
+                        "shippingAddress",
+                        "city",
+                        e.target.value
+                      )
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.shippingAddress.state}
+                    onChange={(e) =>
+                      handleAddressChange(
+                        "shippingAddress",
+                        "state",
+                        e.target.value
+                      )
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    ZIP Code
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.shippingAddress.zipCode}
+                    onChange={(e) =>
+                      handleAddressChange(
+                        "shippingAddress",
+                        "zipCode",
+                        e.target.value
+                      )
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.shippingAddress.country}
+                    onChange={(e) =>
+                      handleAddressChange(
+                        "shippingAddress",
+                        "country",
+                        e.target.value
+                      )
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
