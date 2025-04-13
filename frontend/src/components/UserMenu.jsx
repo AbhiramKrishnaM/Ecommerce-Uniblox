@@ -26,7 +26,7 @@ export default function UserMenu({ user, onLogout }) {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
           <Link
-            to="/profile"
+            // to="/profile"
             className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             <svg

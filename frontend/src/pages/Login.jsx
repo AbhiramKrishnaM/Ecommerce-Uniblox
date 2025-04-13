@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { authService } from "../../api/authentication";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function Login() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setUser } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,7 +28,8 @@ export default function Login() {
 
     try {
       setLoading(true);
-      await authService.login(formData);
+      const data = await authService.login(formData);
+      setUser(data.user);
       navigate(location.state?.from?.pathname || "/");
     } catch (error) {
       setError(error.message || "Login failed");

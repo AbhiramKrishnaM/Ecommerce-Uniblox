@@ -16,10 +16,12 @@ export const authService = {
   async login(credentials) {
     try {
       const response = await axios.post("/auth/login", credentials);
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+      const { data } = response.data;
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
       }
-      return response.data;
+      return data;
     } catch (error) {
       throw error.response?.data || { message: "Login failed" };
     }
@@ -28,13 +30,20 @@ export const authService = {
   async getProfile() {
     try {
       const response = await axios.get("/auth/profile");
-      return response.data;
+      return response.data.data;
     } catch (error) {
       throw error.response?.data || { message: "Failed to fetch profile" };
     }
   },
 
-  logout() {
-    localStorage.removeItem("token");
+  async logout() {
+    try {
+      await axios.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout API error:", error);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
   },
 };
