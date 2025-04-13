@@ -2,6 +2,7 @@ import express from "express";
 import { AuthService } from "../services/auth.service.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
 import { ResponseUtil } from "../utils/response.util.js";
+import prisma from "../lib/prisma.js";
 
 const router = express.Router();
 
@@ -9,10 +10,19 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await AuthService.register(username, password);
+    const { user, welcomeDiscount } = await AuthService.register(
+      username,
+      password
+    );
+
     res
       .status(201)
-      .json(ResponseUtil.created(user, "User registered successfully"));
+      .json(
+        ResponseUtil.created(
+          { user, welcomeDiscount },
+          "User registered successfully! Check your welcome discount code"
+        )
+      );
   } catch (error) {
     res.status(400).json(ResponseUtil.error(error.message, 400));
   }
@@ -61,47 +71,29 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-// Get user's discount codes
-router.get("/discount-codes", authenticateToken, async (req, res) => {
+// Get user's available discount codes
+router.get("/my-discounts", authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.userId;
-
-    const discountCodes = await prisma.discountCode.findMany({
+    const discounts = await prisma.userDiscountCode.findMany({
       where: {
-        OR: [
-          // Personal discount codes (if linked to user)
-          { userId: userId },
-          // General active discount codes
-          {
-            AND: [
-              { isActive: true },
-              { endDate: { gt: new Date() } },
-              {
-                OR: [
-                  { maxUses: null },
-                  { currentUses: { lt: prisma.discountCode.fields.maxUses } },
-                ],
-              },
-            ],
-          },
-        ],
+        userId: req.user.userId,
+        isUsed: false,
+        expiresAt: { gt: new Date() },
       },
-      select: {
-        id: true,
-        code: true,
-        discountType: true,
-        discountValue: true,
-        minPurchase: true,
-        endDate: true,
-        currentUses: true,
-        maxUses: true,
+      include: {
+        discount: true,
       },
     });
 
     res.json(
       ResponseUtil.success(
-        discountCodes,
-        "Discount codes retrieved successfully"
+        discounts.map((d) => ({
+          code: d.code,
+          discountValue: d.discount.discountValue,
+          discountType: d.discount.discountType,
+          expiresAt: d.expiresAt,
+        })),
+        "Available discount codes retrieved successfully"
       )
     );
   } catch (error) {

@@ -39,8 +39,9 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relationships
-  carts  Cart[]  @relation("UserCarts")
-  orders Order[] @relation("UserOrders")
+  carts         Cart[]             @relation("UserCarts")
+  orders        Order[]            @relation("UserOrders")
+  discountCodes UserDiscountCode[] @relation("UserDiscounts")
 }
 
 // Cart model
@@ -132,7 +133,8 @@ model DiscountCode {
   updatedAt     DateTime     @updatedAt
 
   // Relationships
-  orders Order[]
+  orders        Order[]
+  userDiscounts UserDiscountCode[] @relation("DiscountToUser")
 }
 
 // Discount type enum
@@ -152,4 +154,20 @@ model BlacklistedToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// Add this new model
+model UserDiscountCode {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  // Relationships
+  user     User         @relation("UserDiscounts", fields: [userId], references: [id])
+  discount DiscountCode @relation("DiscountToUser", fields: [code], references: [code])
+
+  @@unique([userId, code])
 }

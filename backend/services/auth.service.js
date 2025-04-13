@@ -12,13 +12,42 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    return prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         username,
         password: hashedPassword,
         role: "USER",
       },
     });
+
+    const welcomeCode = `WELCOME${user.id.slice(0, 6)}`;
+    const discountCode = await prisma.discountCode.create({
+      data: {
+        code: welcomeCode,
+        discountType: "PERCENTAGE",
+        discountValue: 50.0,
+        maxUses: 1,
+        isActive: true,
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    await prisma.userDiscountCode.create({
+      data: {
+        userId: user.id,
+        code: welcomeCode,
+        expiresAt: discountCode.endDate,
+      },
+    });
+
+    return {
+      user,
+      welcomeDiscount: {
+        code: welcomeCode,
+        discountValue: 50,
+        expiresAt: discountCode.endDate,
+      },
+    };
   }
 
   static async login(username, password) {

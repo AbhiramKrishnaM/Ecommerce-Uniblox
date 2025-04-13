@@ -5,6 +5,8 @@ import prisma from "../lib/prisma.js";
 import { CartService } from "../services/cart.service.js";
 import { OrderService } from "../services/order.service.js";
 import { ResponseUtil } from "../utils/response.util.js";
+import { DiscountService } from "../services/discount.service.js";
+import { UserDiscountService } from "../services/user-discount.service.js";
 
 const router = express.Router();
 
@@ -75,6 +77,11 @@ router.post("/:cartId/checkout", authenticateToken, async (req, res) => {
     const { totalAmount: finalAmount, discountCodeRecord } =
       await OrderService.applyDiscount(totalAmount, discountCode);
 
+    if (discountCode && discountCodeRecord) {
+      // Mark discount as used if it's a user-specific discount
+      await UserDiscountService.markDiscountAsUsed(userId, discountCode);
+    }
+
     // Create order
     const order = await OrderService.createOrderFromCart({
       userId,
@@ -87,11 +94,30 @@ router.post("/:cartId/checkout", authenticateToken, async (req, res) => {
       contactPhone,
     });
 
+    // Check and generate new discount if eligible
+    const newDiscount = await UserDiscountService.checkAndGenerateDiscount(
+      userId
+    );
+
     // Clear cart
     await CartService.clearCart(cartId);
 
     res.json(
-      ResponseUtil.success({ order }, "Checkout completed successfully")
+      ResponseUtil.success(
+        {
+          order,
+          newDiscount: newDiscount
+            ? {
+                code: newDiscount.code,
+                discountValue: newDiscount.discountValue,
+                expiresAt: newDiscount.endDate,
+              }
+            : null,
+        },
+        newDiscount
+          ? "Order completed successfully! You've earned a loyalty discount!"
+          : "Order completed successfully"
+      )
     );
   } catch (error) {
     const status =
