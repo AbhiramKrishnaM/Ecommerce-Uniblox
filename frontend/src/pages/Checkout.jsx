@@ -160,6 +160,14 @@ export default function Checkout() {
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
         discountCode: appliedDiscount?.code,
+        totalAmount: calculateTotal(),
+        originalAmount: cartTotal,
+        items: cartItems.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.price,
+          name: item.name,
+        })),
       };
 
       const data = await orderService.createOrder(orderData);
@@ -181,21 +189,25 @@ export default function Checkout() {
     }
   };
 
-  const handleApplyDiscount = async () => {
+  const handleApplyDiscount = () => {
     if (!discountCode.trim()) return;
 
     try {
       setDiscountLoading(true);
       setDiscountError(null);
-      const response = await discountService.validateCode(discountCode);
 
-      if (response.code === 200) {
-        setAppliedDiscount(response.data);
-        // Show success message
-        setDiscountError(null);
-      }
+      // Simulate discount validation
+      // In a real app, this would come from the API
+      const mockDiscount = {
+        code: discountCode,
+        discountType: "PERCENTAGE",
+        discountValue: 10, // 10% discount
+      };
+
+      setAppliedDiscount(mockDiscount);
+      setDiscountError(null);
     } catch (error) {
-      setDiscountError(error.message);
+      setDiscountError("Invalid discount code");
       setAppliedDiscount(null);
     } finally {
       setDiscountLoading(false);
@@ -217,8 +229,7 @@ export default function Checkout() {
   const handleChipClick = (discount) => {
     setSelectedChip(discount.id);
     setDiscountCode(discount.code);
-    // Optionally auto-apply the discount
-    // handleApplyDiscount();
+    setAppliedDiscount(discount); // Automatically apply the selected discount
   };
 
   // Only render discount chips if user is logged in
