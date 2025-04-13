@@ -253,5 +253,4 @@ Error response format:
 {
   "error": "Error message description"
 }
-```
-```
+

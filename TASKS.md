@@ -1,25 +1,25 @@
 # E-commerce Store MVP Tasks
 
 ## 1. Setup and Project Structure
-- [ ] Initialize project repository
-- [ ] Set up basic project structure (backend/frontend)
+- [x] Initialize project repository
+- [x] Set up basic project structure (backend/frontend)
 - [ ] Configure package dependencies
 - [ ] Set up development environment
 
 ## 2. Data Models
-- [ ] Design Product model (id, name, price, description, etc.)
-- [ ] Design Cart model
-- [ ] Design Order model
-- [ ] Design Discount Code model
+- [x] Design Product model (id, name, price, description, etc.)
+- [x] Design Cart model
+- [x] Design Order model
+- [x] Design Discount Code model
 - [ ] Implement in-memory data store
 
 ## 3. Prisma Integration
-- [ ] Install Prisma dependencies (prisma, @prisma/client)
-- [ ] Initialize Prisma in the project
+- [x] Install Prisma dependencies (prisma, @prisma/client)
+- [x] Initialize Prisma in the project
 - [ ] Configure database connection
-- [ ] Create Prisma schema with models for Product, Cart, Order, and Discount
-- [ ] Generate Prisma client
-- [ ] Create database migration
+- [x] Create Prisma schema with models for Product, Cart, Order, and Discount
+- [x] Generate Prisma client
+- [x] Create database migration
 - [ ] Set up Prisma service layer for database operations
 
 ## 4. API Development - Core Features
