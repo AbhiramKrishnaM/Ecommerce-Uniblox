@@ -1,8 +1,10 @@
 import jwt from "jsonwebtoken";
+import { AuthService } from "../services/auth.service.js";
+import { ResponseUtil } from "../utils/response.util.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
-export const authenticateToken = (req, res, next) => {
+export const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -11,6 +13,13 @@ export const authenticateToken = (req, res, next) => {
   }
 
   try {
+    // Check if token is blacklisted
+    if (await AuthService.isTokenBlacklisted(token)) {
+      return res
+        .status(401)
+        .json(ResponseUtil.error("Token has been invalidated", 401));
+    }
+
     const user = jwt.verify(token, JWT_SECRET);
     req.user = user;
     next();

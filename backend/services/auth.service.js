@@ -38,4 +38,20 @@ export class AuthService {
 
     return { user, token };
   }
+
+  static async blacklistToken(token) {
+    await prisma.blacklistedToken.create({
+      data: {
+        token,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  static async isTokenBlacklisted(token) {
+    const blacklistedToken = await prisma.blacklistedToken.findUnique({
+      where: { token },
+    });
+    return !!blacklistedToken;
+  }
 }
