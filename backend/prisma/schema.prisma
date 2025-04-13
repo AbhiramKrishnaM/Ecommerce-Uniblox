@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -59,18 +58,16 @@ model CartItem {
 
 // Order model
 model Order {
-  id          String      @id @default(uuid())
-  userId      String? // Optional: can be null for guest orders
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  // Shipping and billing information
+  id              String      @id @default(uuid())
+  userId          String? // Optional: can be null for guest orders
+  status          OrderStatus @default(PENDING)
+  totalAmount     Decimal     @db.Decimal(10, 2)
   shippingAddress String?
   billingAddress  String?
   contactEmail    String?
   contactPhone    String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   // Relationships
   items          OrderItem[]
