@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useCart } from "../contexts/CartContext";
+import UserMenu from "./UserMenu";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -26,7 +27,7 @@ export default function Navbar() {
             </Link> */}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             <Link to="/cart" className="relative">
               <svg
                 className="w-6 h-6 text-gray-600"
@@ -47,20 +48,7 @@ export default function Navbar() {
             </Link>
 
             {user ? (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/profile"
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={logout}
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  Logout
-                </button>
-              </div>
+              <UserMenu user={user} onLogout={logout} />
             ) : (
               <Link
                 to="/login"

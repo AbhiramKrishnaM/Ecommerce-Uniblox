@@ -26,8 +26,12 @@ export const authService = {
   },
 
   async getProfile() {
-    const response = await axios.get("/auth/profile");
-    return response.data;
+    try {
+      const response = await axios.get("/auth/profile");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch profile" };
+    }
   },
 
   logout() {
