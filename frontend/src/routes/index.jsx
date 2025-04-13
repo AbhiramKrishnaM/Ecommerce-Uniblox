@@ -4,6 +4,7 @@ import Home from "../pages/Home";
 import Products from "../pages/Products";
 import Cart from "../pages/Cart";
 import Login from "../pages/Login";
+import Register from "../pages/Register";
 
 export default function AppRoutes() {
   const routes = useRoutes([
@@ -15,6 +16,7 @@ export default function AppRoutes() {
         { path: "products", element: <Products /> },
         { path: "cart", element: <Cart /> },
         { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
       ],
     },
   ]);
