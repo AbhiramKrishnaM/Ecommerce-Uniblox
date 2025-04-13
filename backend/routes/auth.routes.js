@@ -61,4 +61,52 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Get user's discount codes
+router.get("/discount-codes", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const discountCodes = await prisma.discountCode.findMany({
+      where: {
+        OR: [
+          // Personal discount codes (if linked to user)
+          { userId: userId },
+          // General active discount codes
+          {
+            AND: [
+              { isActive: true },
+              { endDate: { gt: new Date() } },
+              {
+                OR: [
+                  { maxUses: null },
+                  { currentUses: { lt: prisma.discountCode.fields.maxUses } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        code: true,
+        discountType: true,
+        discountValue: true,
+        minPurchase: true,
+        endDate: true,
+        currentUses: true,
+        maxUses: true,
+      },
+    });
+
+    res.json(
+      ResponseUtil.success(
+        discountCodes,
+        "Discount codes retrieved successfully"
+      )
+    );
+  } catch (error) {
+    res.status(500).json(ResponseUtil.error(error.message));
+  }
+});
+
 export default router;

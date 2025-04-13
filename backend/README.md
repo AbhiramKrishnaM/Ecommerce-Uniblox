@@ -154,7 +154,13 @@ Request Body:
 Response:
 ```json
 {
-  "message": "User registered successfully"
+  "data": {
+    "id": "user_uuid",
+    "username": "newuser",
+    "role": "USER"
+  },
+  "message": "User registered successfully",
+  "code": 201
 }
 ```
 
@@ -172,12 +178,33 @@ Request Body:
 Response:
 ```json
 {
-  "user": {
-    "id": "user_uuid",
-    "username": "newuser",
-    "role": "USER"
+  "data": {
+    "user": {
+      "id": "user_uuid",
+      "username": "newuser",
+      "role": "USER"
+    },
+    "token": "jwt_token_here"
   },
-  "token": "jwt_token_here"
+  "message": "Login successful",
+  "code": 200
+}
+```
+
+#### Logout
+```http
+POST /api/auth/logout
+```
+Headers:
+```http
+Authorization: Bearer your_jwt_token
+```
+Response:
+```json
+{
+  "data": null,
+  "message": "Logged out successfully",
+  "code": 200
 }
 ```
 
@@ -192,10 +219,14 @@ Authorization: Bearer your_jwt_token
 Response:
 ```json
 {
-  "id": "user_uuid",
-  "username": "newuser",
-  "role": "USER",
-  "createdAt": "2024-03-20T10:00:00Z"
+  "data": {
+    "id": "user_uuid",
+    "username": "newuser",
+    "role": "USER",
+    "createdAt": "2024-03-20T10:00:00Z"
+  },
+  "message": "Profile retrieved successfully",
+  "code": 200
 }
 ```
 
@@ -358,23 +389,37 @@ The database is seeded with:
 
 ## Error Handling
 
-The API returns appropriate HTTP status codes:
+The API returns standardized error responses:
+
+```json
+{
+  "data": null,
+  "message": "Error message here",
+  "code": 400 // or appropriate status code
+}
+```
+
+Common status codes:
 - 200: Success
 - 201: Created (for new resources)
 - 400: Bad Request (invalid input)
-- 401: Unauthorized (missing authentication)
+- 401: Unauthorized (missing/invalid authentication)
 - 403: Forbidden (insufficient permissions)
 - 404: Not Found
 - 500: Server Error
 
-Common error responses:
+Example error responses:
 ```json
 {
-  "error": "Cart not found"  // 404
+  "data": null,
+  "message": "Cart not found",
+  "code": 404
 }
 ```
 ```json
 {
-  "error": "Authentication required"  // 401
+  "data": null,
+  "message": "Authentication required",
+  "code": 401
 }
 
