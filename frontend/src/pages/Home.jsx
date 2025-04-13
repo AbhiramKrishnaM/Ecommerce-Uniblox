@@ -3,7 +3,22 @@ import { useProducts } from "../contexts/ProductContext";
 import ProductCard from "../components/ProductCard";
 
 export default function Home() {
-  const { products, loading, error, fetchProducts } = useProducts();
+  const {
+    products,
+    loading,
+    error,
+    fetchProducts,
+    selectedCategory,
+    setSelectedCategory,
+  } = useProducts();
+
+  const categories = [
+    "All",
+    "Laptops",
+    "Smartphones",
+    "Accessories",
+    "Gadgets",
+  ];
 
   useEffect(() => {
     fetchProducts();
@@ -25,12 +40,6 @@ export default function Home() {
     );
   }
 
-  if (!Array.isArray(products)) {
-    return (
-      <div className="text-center text-red-500 py-8">No products available</div>
-    );
-  }
-
   return (
     <div className="container mx-auto px-4">
       <div className="mb-8 text-center">
@@ -45,28 +54,49 @@ export default function Home() {
       {/* Featured Categories */}
       <div className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Featured Categories</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {["Laptops", "Smartphones", "Accessories", "Gadgets"].map(
-            (category) => (
-              <div
-                key={category}
-                className="bg-gray-100 rounded-lg p-4 text-center hover:bg-gray-200 cursor-pointer transition-colors"
-              >
-                <h3 className="font-medium">{category}</h3>
-              </div>
-            )
-          )}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {categories.map((category) => (
+            <div
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`
+                bg-gray-100 rounded-lg p-4 text-center 
+                cursor-pointer transition-colors
+                ${
+                  selectedCategory === category
+                    ? "bg-blue-500 text-white"
+                    : "hover:bg-gray-200"
+                }
+              `}
+            >
+              <h3 className="font-medium">{category}</h3>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Products Grid */}
       <div className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Featured Products</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-semibold">
+            {selectedCategory === "All" ? "All Products" : selectedCategory}
+          </h2>
+          <span className="text-gray-600">
+            {products.length} products found
+          </span>
         </div>
+
+        {products.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No products found in this category
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Newsletter Signup */}

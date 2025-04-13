@@ -7,6 +7,7 @@ export function ProductProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const fetchProducts = async () => {
     try {
@@ -20,13 +21,49 @@ export function ProductProvider({ children }) {
     }
   };
 
+  // Get filtered products based on selected category
+  const getFilteredProducts = () => {
+    if (selectedCategory === "All") return products;
+
+    return products.filter((product) => {
+      // Add category-based filtering logic
+      switch (selectedCategory) {
+        case "Laptops":
+          return product.name.toLowerCase().includes("laptop");
+        case "Smartphones":
+          return (
+            product.name.toLowerCase().includes("phone") ||
+            product.name.toLowerCase().includes("mobile")
+          );
+        case "Accessories":
+          return (
+            product.name.toLowerCase().includes("charger") ||
+            product.name.toLowerCase().includes("case") ||
+            product.name.toLowerCase().includes("adapter") ||
+            product.name.toLowerCase().includes("stand")
+          );
+        case "Gadgets":
+          return (
+            product.name.toLowerCase().includes("watch") ||
+            product.name.toLowerCase().includes("camera") ||
+            product.name.toLowerCase().includes("headset") ||
+            product.name.toLowerCase().includes("speaker")
+          );
+        default:
+          return true;
+      }
+    });
+  };
+
   return (
     <ProductContext.Provider
       value={{
-        products,
+        products: getFilteredProducts(),
         loading,
         error,
         fetchProducts,
+        selectedCategory,
+        setSelectedCategory,
       }}
     >
       {children}

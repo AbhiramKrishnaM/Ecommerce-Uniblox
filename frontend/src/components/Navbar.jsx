@@ -17,7 +17,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex space-x-8">
-            <Link to="/products" className="text-gray-600 hover:text-blue-600">
+            {/* <Link to="/products" className="text-gray-600 hover:text-blue-600">
               Products
             </Link>
             <Link to="/deals" className="text-gray-600 hover:text-blue-600">
@@ -25,7 +25,7 @@ export default function Navbar() {
             </Link>
             <Link to="/about" className="text-gray-600 hover:text-blue-600">
               About
-            </Link>
+            </Link> */}
           </div>
 
           <div className="flex items-center space-x-4">
