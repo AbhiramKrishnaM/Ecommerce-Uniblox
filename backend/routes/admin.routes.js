@@ -1,5 +1,6 @@
 import express from "express";
 import prisma from "../lib/prisma.js";
+import { ResponseUtil } from "../utils/response.util.js";
 
 const router = express.Router();
 
@@ -16,9 +17,13 @@ router.post("/discount-codes", async (req, res) => {
         endDate: endDate ? new Date(endDate) : null,
       },
     });
-    res.json(discountCode);
+    res
+      .status(201)
+      .json(
+        ResponseUtil.created(discountCode, "Discount code created successfully")
+      );
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(ResponseUtil.error(error.message));
   }
 });
 
@@ -47,14 +52,16 @@ router.get("/statistics", async (req, res) => {
       },
     });
 
-    res.json({
+    const data = {
       totalOrders,
       totalAmount: totalAmount._sum.totalAmount,
       totalDiscounts,
       topProducts,
-    });
+    };
+
+    res.json(ResponseUtil.success(data, "Statistics retrieved successfully"));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(ResponseUtil.error(error.message));
   }
 });
 

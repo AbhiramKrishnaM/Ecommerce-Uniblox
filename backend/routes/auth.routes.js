@@ -1,6 +1,7 @@
 import express from "express";
 import { AuthService } from "../services/auth.service.js";
 import { authenticateToken } from "../middleware/auth.middleware.js";
+import { ResponseUtil } from "../utils/response.util.js";
 
 const router = express.Router();
 
@@ -9,9 +10,11 @@ router.post("/register", async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await AuthService.register(username, password);
-    res.status(201).json({ message: "User registered successfully" });
+    res
+      .status(201)
+      .json(ResponseUtil.created(user, "User registered successfully"));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(ResponseUtil.error(error.message, 400));
   }
 });
 
@@ -20,9 +23,9 @@ router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     const { user, token } = await AuthService.login(username, password);
-    res.json({ token, role: user.role });
+    res.json(ResponseUtil.success({ user, token }, "Login successful"));
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    res.status(401).json(ResponseUtil.error(error.message, 401));
   }
 });
 
@@ -33,9 +36,9 @@ router.get("/profile", authenticateToken, async (req, res) => {
       where: { id: req.user.userId },
       select: { id: true, username: true, role: true },
     });
-    res.json(user);
+    res.json(ResponseUtil.success(user, "Profile retrieved successfully"));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(ResponseUtil.error(error.message));
   }
 });
 

@@ -4,6 +4,7 @@ import { authenticateToken } from "../middleware/auth.middleware.js";
 import prisma from "../lib/prisma.js";
 import { CartService } from "../services/cart.service.js";
 import { OrderService } from "../services/order.service.js";
+import { ResponseUtil } from "../utils/response.util.js";
 
 const router = express.Router();
 
@@ -13,9 +14,9 @@ router.post("/:cartId/items", async (req, res) => {
     const { cartId } = req.params;
     const { productId, quantity } = req.body;
     const cartItem = await PrismaService.addToCart(cartId, productId, quantity);
-    res.json(cartItem);
+    res.json(ResponseUtil.success(cartItem, "Item added to cart"));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(ResponseUtil.error(error.message));
   }
 });
 
@@ -89,10 +90,9 @@ router.post("/:cartId/checkout", authenticateToken, async (req, res) => {
     // Clear cart
     await CartService.clearCart(cartId);
 
-    res.json({
-      message: "Checkout successful",
-      order,
-    });
+    res.json(
+      ResponseUtil.success({ order }, "Checkout completed successfully")
+    );
   } catch (error) {
     const status =
       {
@@ -101,7 +101,7 @@ router.post("/:cartId/checkout", authenticateToken, async (req, res) => {
         "Cart is empty": 400,
       }[error.message] || 500;
 
-    res.status(status).json({ error: error.message });
+    res.status(status).json(ResponseUtil.error(error.message, status));
   }
 });
 

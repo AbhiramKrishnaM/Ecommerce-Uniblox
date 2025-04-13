@@ -1,6 +1,7 @@
 import express from "express";
 import { PrismaService } from "../services/prisma.service.js";
 import { AuthService } from "../services/auth.service.js";
+import { ResponseUtil } from "../utils/response.util.js";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post("/", async (req, res) => {
     // Get cart items
     const cart = await PrismaService.getCart(cartId);
     if (!cart || !cart.items.length) {
-      return res.status(400).json({ error: "Cart is empty" });
+      return res.status(400).json(ResponseUtil.error("Cart is empty", 400));
     }
 
     // Calculate total amount
@@ -59,9 +60,11 @@ router.post("/", async (req, res) => {
     // Clear cart
     await prisma.cartItem.deleteMany({ where: { cartId } });
 
-    res.json(order);
+    res
+      .status(201)
+      .json(ResponseUtil.created(order, "Order created successfully"));
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json(ResponseUtil.error(error.message));
   }
 });
 
