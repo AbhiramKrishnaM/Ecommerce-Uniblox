@@ -83,6 +83,122 @@ Request Body:
 }
 ```
 
+#### Checkout Cart
+```http
+POST /api/carts/:cartId/checkout
+```
+Headers:
+```http
+Authorization: Bearer your_jwt_token
+```
+Request Body:
+```json
+{
+  "shippingAddress": {
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA"
+  },
+  "billingAddress": {  // Optional, if same as shipping
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA"
+  },
+  "contactEmail": "user@example.com",
+  "contactPhone": "+1234567890",
+  "discountCode": "WELCOME10"  // Optional
+}
+```
+Response:
+```json
+{
+  "message": "Checkout successful",
+  "order": {
+    "id": "order_uuid",
+    "userId": "user_uuid",
+    "totalAmount": 150.00,
+    "status": "PENDING",
+    "items": [
+      {
+        "productId": "product_uuid",
+        "quantity": 2,
+        "unitPrice": 29.99
+      }
+    ],
+    "shippingAddress": { ... },
+    "billingAddress": { ... },
+    "contactEmail": "user@example.com",
+    "contactPhone": "+1234567890",
+    "createdAt": "2024-03-20T10:00:00Z"
+  }
+}
+```
+
+### Authentication
+
+#### Register New User
+```http
+POST /api/auth/register
+```
+Request Body:
+```json
+{
+  "username": "newuser",
+  "password": "password123"
+}
+```
+Response:
+```json
+{
+  "message": "User registered successfully"
+}
+```
+
+#### Login
+```http
+POST /api/auth/login
+```
+Request Body:
+```json
+{
+  "username": "newuser",
+  "password": "password123"
+}
+```
+Response:
+```json
+{
+  "user": {
+    "id": "user_uuid",
+    "username": "newuser",
+    "role": "USER"
+  },
+  "token": "jwt_token_here"
+}
+```
+
+#### Get User Profile
+```http
+GET /api/auth/profile
+```
+Headers:
+```http
+Authorization: Bearer your_jwt_token
+```
+Response:
+```json
+{
+  "id": "user_uuid",
+  "username": "newuser",
+  "role": "USER",
+  "createdAt": "2024-03-20T10:00:00Z"
+}
+```
+
 ### Orders
 
 #### Create Order (Checkout)
@@ -244,13 +360,21 @@ The database is seeded with:
 
 The API returns appropriate HTTP status codes:
 - 200: Success
+- 201: Created (for new resources)
 - 400: Bad Request (invalid input)
+- 401: Unauthorized (missing authentication)
+- 403: Forbidden (insufficient permissions)
 - 404: Not Found
 - 500: Server Error
 
-Error response format:
+Common error responses:
 ```json
 {
-  "error": "Error message description"
+  "error": "Cart not found"  // 404
+}
+```
+```json
+{
+  "error": "Authentication required"  // 401
 }
 
