@@ -1,12 +1,20 @@
 import express from "express";
 import { PrismaService } from "../services/prisma.service.js";
+import { AuthService } from "../services/auth.service.js";
 
 const router = express.Router();
 
 // Create order (checkout)
 router.post("/", async (req, res) => {
   try {
-    const { cartId, discountCode, ...orderData } = req.body;
+    const { cartId, discountCode, username, password, ...orderData } = req.body;
+    let userId = req.user?.userId; // From JWT token if logged in
+
+    // Handle account creation during checkout
+    if (!userId && username && password) {
+      const newUser = await AuthService.register(username, password);
+      userId = newUser.id;
+    }
 
     // Get cart items
     const cart = await PrismaService.getCart(cartId);
@@ -38,6 +46,7 @@ router.post("/", async (req, res) => {
     // Create order
     const order = await PrismaService.createOrder({
       ...orderData,
+      userId,
       totalAmount,
       discountCodeId: discountCodeRecord?.id,
       items: cart.items.map((item) => ({
