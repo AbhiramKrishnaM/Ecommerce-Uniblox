@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../contexts/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { formatPrice } from "../utils/formatters";
+import { discountService } from "../../api/discount";
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -11,7 +12,11 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [discountCode, setDiscountCode] = useState("");
-  const [discountApplied, setDiscountApplied] = useState(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+  const [discountError, setDiscountError] = useState(null);
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [userDiscounts, setUserDiscounts] = useState([]);
+  const [selectedChip, setSelectedChip] = useState(null);
 
   const [formData, setFormData] = useState({
     shippingAddress: {
@@ -37,6 +42,24 @@ export default function Checkout() {
     navigate("/cart");
     return null;
   }
+
+  // Fetch user's discount codes
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      try {
+        // Only fetch discounts if user is logged in
+        if (user) {
+          const response = await discountService.getUserDiscounts();
+          setUserDiscounts(response.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch discount codes:", error);
+        setUserDiscounts([]);
+      }
+    };
+
+    fetchDiscounts();
+  }, [user]);
 
   const handleAddressChange = (type, field, value) => {
     setFormData((prev) => ({
@@ -134,7 +157,7 @@ export default function Checkout() {
           : formData.billingAddress,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
-        discountCode: discountApplied?.code,
+        discountCode: appliedDiscount?.code,
       };
 
       const response = await fetch("/api/orders", {
@@ -167,39 +190,90 @@ export default function Checkout() {
   };
 
   const handleApplyDiscount = async () => {
-    if (!discountCode) return;
+    if (!discountCode.trim()) return;
 
     try {
-      const response = await fetch(`/api/discount-codes/validate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: discountCode }),
-      });
+      setDiscountLoading(true);
+      setDiscountError(null);
+      const response = await discountService.validateCode(discountCode);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message);
+      if (response.code === 200) {
+        setAppliedDiscount(response.data);
+        // Show success message
+        setDiscountError(null);
       }
-
-      setDiscountApplied(data.data);
     } catch (error) {
-      setError(error.message);
+      setDiscountError(error.message);
+      setAppliedDiscount(null);
+    } finally {
+      setDiscountLoading(false);
     }
   };
 
   const calculateTotal = () => {
     let total = cartTotal;
-    if (discountApplied) {
-      if (discountApplied.discountType === "PERCENTAGE") {
-        total = total * (1 - discountApplied.discountValue / 100);
+    if (appliedDiscount) {
+      if (appliedDiscount.discountType === "PERCENTAGE") {
+        total = total * (1 - appliedDiscount.discountValue / 100);
       } else {
-        total = total - discountApplied.discountValue;
+        total = total - appliedDiscount.discountValue;
       }
     }
     return Math.max(total, 0);
+  };
+
+  const handleChipClick = (discount) => {
+    setSelectedChip(discount.id);
+    setDiscountCode(discount.code);
+    // Optionally auto-apply the discount
+    // handleApplyDiscount();
+  };
+
+  // Only render discount chips if user is logged in
+  const renderDiscountChips = () => {
+    if (!user) {
+      return (
+        <p className="text-sm text-gray-600 mb-2">
+          <Link to="/login" className="text-blue-600 hover:text-blue-800">
+            Log in
+          </Link>{" "}
+          to see your available discount codes
+        </p>
+      );
+    }
+
+    if (userDiscounts.length === 0) {
+      return (
+        <p className="text-sm text-gray-600 mb-2">
+          No discount codes available
+        </p>
+      );
+    }
+
+    return (
+      <div className="mb-4">
+        <p className="text-sm text-gray-600 mb-2">Available Discounts:</p>
+        <div className="flex flex-wrap gap-2">
+          {userDiscounts.map((discount) => (
+            <button
+              key={discount.id}
+              onClick={() => handleChipClick(discount)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors
+                ${
+                  selectedChip === discount.id
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+            >
+              {discount.code}
+              {discount.discountType === "PERCENTAGE" && (
+                <span> ({discount.discountValue}% off)</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -334,42 +408,104 @@ export default function Checkout() {
             ))}
 
             <div className="border-t pt-4">
-              <div className="flex justify-between mb-2">
-                <span>Subtotal</span>
-                <span>${formatPrice(cartTotal)}</span>
-              </div>
+              {/* Available Discount Chips */}
+              {renderDiscountChips()}
 
-              {/* Discount Code */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Discount code"
-                  className="flex-1 rounded-md border-gray-300"
-                />
-                <button
-                  type="button"
-                  onClick={handleApplyDiscount}
-                  disabled={!discountCode || loading}
-                  className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {discountApplied && (
-                <div className="flex justify-between text-green-600 mb-2">
-                  <span>Discount</span>
-                  <span>
-                    {discountApplied.discountType === "PERCENTAGE"
-                      ? `-${discountApplied.discountValue}%`
-                      : `-$${formatPrice(discountApplied.discountValue)}`}
-                  </span>
+              {/* Discount Input Section */}
+              <div className="space-y-2 mb-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={(e) => {
+                      setDiscountCode(e.target.value);
+                      setSelectedChip(null); // Clear selected chip when typing
+                    }}
+                    placeholder="Enter discount code"
+                    className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={discountLoading || appliedDiscount}
+                  />
+                  {!appliedDiscount ? (
+                    <button
+                      type="button"
+                      onClick={handleApplyDiscount}
+                      disabled={discountLoading || !discountCode.trim()}
+                      className={`px-4 py-2 rounded-md ${
+                        discountLoading || !discountCode.trim()
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : "bg-blue-500 hover:bg-blue-600 text-white"
+                      }`}
+                    >
+                      {discountLoading ? "Applying..." : "Apply"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAppliedDiscount(null);
+                        setDiscountCode("");
+                        setSelectedChip(null);
+                      }}
+                      className="px-4 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
-              )}
 
-              <div className="flex justify-between font-bold text-lg">
+                {/* Additional info for selected discount */}
+                {selectedChip && (
+                  <div className="text-sm text-gray-600">
+                    {userDiscounts.find((d) => d.id === selectedChip)
+                      ?.minPurchase && (
+                      <p>
+                        Minimum purchase: $
+                        {formatPrice(
+                          userDiscounts.find((d) => d.id === selectedChip)
+                            .minPurchase
+                        )}
+                      </p>
+                    )}
+                    {userDiscounts.find((d) => d.id === selectedChip)
+                      ?.endDate && (
+                      <p>
+                        Valid until:{" "}
+                        {new Date(
+                          userDiscounts.find(
+                            (d) => d.id === selectedChip
+                          ).endDate
+                        ).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {discountError && (
+                  <p className="text-red-500 text-sm">{discountError}</p>
+                )}
+
+                {appliedDiscount && (
+                  <div className="flex justify-between text-green-600">
+                    <span>
+                      Discount ({appliedDiscount.code})
+                      {appliedDiscount.discountType === "PERCENTAGE"
+                        ? ` (${appliedDiscount.discountValue}% off)`
+                        : ""}
+                    </span>
+                    <span>
+                      -$
+                      {formatPrice(
+                        appliedDiscount.discountType === "PERCENTAGE"
+                          ? (cartTotal * appliedDiscount.discountValue) / 100
+                          : appliedDiscount.discountValue
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between font-bold text-lg pt-2">
                 <span>Total</span>
                 <span>${formatPrice(calculateTotal())}</span>
               </div>
