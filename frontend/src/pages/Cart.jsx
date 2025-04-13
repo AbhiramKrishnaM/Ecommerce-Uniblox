@@ -1,8 +1,9 @@
 import { useCart } from "../contexts/CartContext";
 import { formatPrice } from "../utils/formatters";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { cartItems, updateQuantity, removeFromCart, cartTotal, clearCart } =
     useCart();
 
@@ -109,9 +110,7 @@ export default function Cart() {
           </div>
 
           <button
-            onClick={() => {
-              /* Implement checkout */
-            }}
+            onClick={() => navigate("/checkout")}
             className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors"
           >
             Proceed to Checkout
