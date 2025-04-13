@@ -27,11 +27,9 @@ app.use(
 app.use("/api/products", productRoutes);
 app.use("/api/carts", cartRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 
-// Protect admin routes
-app.use("/api/admin", authenticateToken, requireAdmin);
+app.use("/api/admin", authenticateToken, requireAdmin, adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 
