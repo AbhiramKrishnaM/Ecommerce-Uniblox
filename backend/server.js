@@ -1,6 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import productRoutes from "./routes/product.routes.js";
+import cartRoutes from "./routes/cart.routes.js";
+import orderRoutes from "./routes/order.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+
 dotenv.config();
 
 const app = express();
@@ -8,10 +13,16 @@ app.use(express.json());
 app.use(
   cors({
     origin: process.env.ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   })
 );
+
+// Routes
+app.use("/api/products", productRoutes);
+app.use("/api/carts", cartRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/admin", adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 
