@@ -1,4 +1,5 @@
 import { useCart } from "../contexts/CartContext";
+import { formatPrice } from "../utils/formatters";
 
 export default function ProductCard({ product }) {
   const { cart, addItem, updateItemQuantity } = useCart();
@@ -35,7 +36,7 @@ export default function ProductCard({ product }) {
         <p className="text-sm text-gray-600 mt-1">{product.description}</p>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-xl font-bold text-gray-900">
-            ${product.price.toFixed(2)}
+            ${formatPrice(product.price)}
           </span>
           {isInCart ? (
             <button
@@ -53,6 +54,7 @@ export default function ProductCard({ product }) {
             </button>
           )}
         </div>
+        <div className="mt-2 text-sm text-gray-600">Stock: {product.stock}</div>
       </div>
     </div>
   );

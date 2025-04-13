@@ -25,6 +25,12 @@ export default function Home() {
     );
   }
 
+  if (!Array.isArray(products)) {
+    return (
+      <div className="text-center text-red-500 py-8">No products available</div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4">
       <div className="mb-8 text-center">

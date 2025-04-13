@@ -11,8 +11,8 @@ export function ProductProvider({ children }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const data = await productService.getAllProducts();
-      setProducts(data);
+      const response = await productService.getAllProducts();
+      setProducts(response.data);
     } catch (error) {
       setError(error.message);
     } finally {
